@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초등영어 형성평가 1회</title>
+    <style>
+        /* Tailwind CSS CDN을 직접 로드하지 않고, 기본적인 스타일을 직접 정의합니다. */
+        /* Canvas 환경에서는 Tailwind CSS가 자동으로 적용되지 않을 수 있으므로, 직접 스타일을 정의하는 것이 안전합니다. */
+        body {
+            font-family: 'Inter', sans-serif; /* Inter 폰트 사용 */
+            line-height: 1.6;
+            margin: 0; /* 기본 마진 제거 */
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column; /* 세로 정렬 */
+            justify-content: center;
+            align-items: center; /* 중앙 정렬 */
+            min-height: 100vh; /* 최소 높이 설정 */
+            padding: 20px; /* 전체적인 패딩 추가 */
+            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+            position: relative; /* 로고 위치 지정을 위해 relative 설정 */
+        }
+
+        /* 로고 스타일 */
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 130px; /* 화면 중앙 방향으로 3cm (약 130px) 이동 */
+            width: 150px; /* 로고 크기 조정 */
+            height: auto;
+            z-index: 1000; /* 다른 요소 위에 표시되도록 z-index 설정 */
+            border-radius: 8px; /* 둥근 모서리 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 그림자 추가 */
+        }
+
+        /* 시작 화면 스타일 */
+        #startScreen {
+            display: flex; /* 초기에는 flex로 보여줌 */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: #ffffff;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            max-width: 600px;
+            width: 90%;
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* 부드러운 전환 효과 */
+        }
+        #startScreen.hidden {
+            opacity: 0;
+            transform: translateY(-50px);
+            pointer-events: none; /* 클릭 이벤트 비활성화 */
+            position: absolute; /* 사라질 때 공간 차지하지 않도록 */
+        }
+        #startScreen h2 {
+            font-size: 2.8em; /* 시작 메시지 크기 키우기 */
+            font-weight: bold;
+            color: #007bff; /* 파란색 계열 */
+            margin-bottom: 40px; /* 아래 여백 */
+            animation: bounceIn 1.5s ease-out; /* 바운스인 애니메이션 */
+        }
+        @keyframes bounceIn {
+            0%, 20%, 40%, 60%, 80%, 100% {
+                transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+            }
+            0% {
+                opacity: 0;
+                transform: scale3d(0.3, 0.3, 0.3);
+            }
+            20% {
+                transform: scale3d(1.1, 1.1, 1.1);
+            }
+            40% {
+                transform: scale3d(0.9, 0.9, 0.9);
+            }
+            60% {
+                opacity: 1;
+                transform: scale3d(1.03, 1.03, 1.03);
+            }
+            80% {
+                transform: scale3d(0.97, 0.97, 0.97);
+            }
+            100% {
+                opacity: 1;
+                transform: scale3d(1, 1, 1);
+            }
+        }
+
+        #startButton {
+            padding: 15px 40px;
+            font-size: 1.5em;
+            background-color: #28a745; /* 초록색 버튼 */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        #startButton:hover {
+            background-color: #218838;
+            transform: translateY(-3px);
+        }
+        #startButton:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 카운트다운 메시지 스타일 (이제 사용되지 않지만, 혹시 몰라 유지) */
+        #countdownMessage {
+            font-size: 3em; /* 카운트다운 숫자 크기 키우기 */
+            font-weight: bold;
+            color: #ffc107; /* 노란색 계열 */
+            margin-top: 30px;
+            text-align: center;
+            display: none; /* 항상 숨김 */
+            animation: fadeInOut 1s infinite alternate; /* 깜빡이는 효과 */
+        }
+        @keyframes fadeInOut {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        /* 퀴즈 컨테이너 스타일 */
+        .container {
+            width: 100%; /* 너비 100% */
+            max-width: 800px; /* 최대 너비 설정 */
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px; /* 둥근 모서리 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* 그림자 효과 */
+            display: none; /* 초기에는 숨김 */
+            opacity: 0; /* 애니메이션을 위해 초기 투명도 0 */
+            transform: translateY(20px); /* 애니메이션을 위해 초기 위치 조정 */
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out; /* 부드러운 전환 효과 */
+        }
+        .container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1 {
+            color: #1a73e8; /* Google Blue 계열 색상 */
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em; /* 제목 크기 키우기 */
+            font-weight: bold;
+        }
+        .question {
+            margin-bottom: 25px; /* 문제 간 간격 늘리기 */
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #e0e0e0; /* 연한 점선 */
+        }
+        .question:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .question p {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1em; /* 문제 텍스트 크기 */
+        }
+        .options label {
+            display: block;
+            margin-bottom: 10px; /* 선택지 간 간격 */
+            cursor: pointer;
+            padding: 8px 0; /* 선택지 내부 패딩 */
+            border-radius: 6px; /* 선택지 둥근 모서리 */
+            transition: background-color 0.2s ease; /* 호버 효과 */
+        }
+        .options label:hover {
+            background-color: #f0f0f0;
+        }
+        .options input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2); /* 라디오 버튼 크기 키우기 */
+            vertical-align: middle; /* 텍스트와 정렬 */
+        }
+        .short-answer-input {
+            border: 1px solid #ccc;
+            border-radius: 6px; /* 둥근 모서리 */
+            padding: 8px 12px;
+            margin: 5px 0 10px;
+            width: calc(100% - 24px); /* 너비 조정 */
+            box-sizing: border-box; /* 패딩 포함 너비 계산 */
+        }
+        .submit-btn {
+            display: block;
+            width: 200px; /* 버튼 너비 늘리기 */
+            padding: 12px 20px;
+            background-color: #1a73e8; /* Google Blue */
+            color: white;
+            border: none;
+            border-radius: 8px; /* 둥근 모서리 */
+            cursor: pointer;
+            font-size: 1.1em; /* 버튼 폰트 크기 */
+            margin: 30px auto 0; /* 중앙 정렬 및 상단 여백 */
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 버튼 그림자 */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* 호버/클릭 효과 */
+        }
+        .submit-btn:hover {
+            background-color: #0d47a1; /* 더 진한 파랑 */
+            transform: translateY(-2px); /* 살짝 위로 이동 */
+        }
+        .submit-btn:active {
+            transform: translateY(0); /* 클릭 시 원래 위치로 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #results {
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #e8f0fe; /* 연한 파랑 배경 */
+            border-radius: 10px;
+            display: none; /* 초기에는 숨김 */
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); /* 내부 그림자 */
+        }
+        #results h2 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+        #results p {
+            font-size: 1.2em;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+        #results ul {
+            list-style: none;
+            padding: 0;
+        }
+        #results ul li {
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+        .correct {
+            background-color: #e6ffe6; /* 연한 초록 */
+            color: #28a745; /* 진한 초록 */
+            border: 1px solid #a3e6a3;
+        }
+        .incorrect {
+            background-color: #ffe6e6; /* 연한 빨강 */
+            color: #dc3545; /* 진한 빨강 */
+            border: 1px solid #e6a3a3;
+        }
+        .correct-answer {
+            font-weight: bold;
+            color: #007bff; /* 파란색으로 정답 강조 */
+            margin-top: 5px;
+            display: block; /* 줄바꿈 */
+        }
+
+        /* 모바일 반응형 디자인 */
+        @media (max-width: 600px) {
+            body {
+                margin: 10px;
+                padding: 10px;
+            }
+            .logo {
+                width: 80px; /* 모바일에서 로고 크기 조정 */
+                top: 10px;
+                right: 10px;
+            }
+            #startScreen h2 {
+                font-size: 2em;
+            }
+            #startButton {
+                font-size: 1.2em;
+                padding: 12px 30px;
+            }
+            #countdownMessage {
+                display: none !important; /* 모바일에서 카운트다운 메시지 강제 숨김 */
+            }
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .question p {
+                font-size: 1em;
+            }
+            .submit-btn {
+                width: 100%;
+                font-size: 1em;
+            }
+            #results p {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="Logo2.png" alt="눈높이 러닝센터 로고" class="logo" onerror="this.onerror=null;this.src='https://placehold.co/150xauto/cccccc/333333?text=Logo+Error';">
+
+    <div id="startScreen">
+        <h2>초등 독해력 평가 시작</h2>
+        <button id="startButton">시작하기</button>
+        <div id="countdownMessage" style="display: none;"></div>
+    </div>
+
+    <div class="container" id="quizContainer">
+        <h1>초등영어 형성평가 1회 (Unit 01~06)</h1>
+
+        <form id="quizForm">
+            <div class="question">
+                <p>1. 다음 중 단어와 우리말 뜻의 연결이 적절하지 않은 것을 고르세요.</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="a"> ① thin – 가느다란</label>
+                    <label><input type="radio" name="q1" value="b"> ② become – ~(해)지다</label>
+                    <label><input type="radio" name="q1" value="c"> ③ practice – 점수를 얻다, 득점하다</label>
+                    <label><input type="radio" name="q1" value="d"> ④ camel – 낙타</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>2. 다음 중 단어와 우리말 뜻의 연결이 적절하지 않은 것을 고르세요.</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="a"> ① crow – 까마귀</label>
+                    <label><input type="radio" name="q2" value="b"> ② empty – 각각의</label>
+                    <label><input type="radio" name="q2" value="c"> ③ astronaut – 우주 비행사</label>
+                    <label><input type="radio" name="q2" value="d"> ④ grab – 잡다</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>3. 다음 단어의 알맞은 우리말 뜻을 보기에서 선택해서 쓰세요.</p>
+                <div class="options">
+                    <p>
+                        [믿다] [촛불] [머무르다] [걱정하는]<br>
+                        stay <input type="text" name="q3_1" class="short-answer-input" data-correct="머무르다"><br>
+                        candle <input type="text" name="q3_2" class="short-answer-input" data-correct="촛불"><br>
+                        worried <input type="text" name="q3_3" class="short-answer-input" data-correct="걱정하는"><br>
+                        believe <input type="text" name="q3_4" class="short-answer-input" data-correct="믿다">
+                    </p>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>4. 다음 단어의 알맞은 우리말 뜻을 보기에서 선택해서 쓰세요.</p>
+                <div class="options">
+                    <p>
+                        [노를 젓다] [많은] [가로질러] [떨어뜨리다]<br>
+                        drop <input type="text" name="q4_1" class="short-answer-input" data-correct="떨어뜨리다"><br>
+                        row <input type="text" name="q4_2" class="short-answer-input" data-correct="노를 젓다"><br>
+                        across <input type="text" name="q4_3" class="short-answer-input" data-correct="가로질러"><br>
+                        a lot of <input type="text" name="q4_4" class="short-answer-input" data-correct="많은">
+                    </p>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>5. 다음 중 ‘I’에 관한 글의 내용과 일치하지 않는 것을 고르세요.</p>
+                <div class="options">
+                    <p>
+                        I have many shapes and colors. You can find me everywhere. <br>
+                        With me, any place becomes fun. But I love parties and parks the most!<br>
+                        I am very light. Fill me with air. Then I will float.<br>
+                        But be careful with sharp things. I can pop with a loud noise! What am I?
+                    </p>
+                    <label><input type="radio" name="q5" value="a"> ① 모양과 색이 다양하다.</label>
+                    <label><input type="radio" name="q5" value="b"> ② 파티와 공원을 좋아한다.</label>
+                    <label><input type="radio" name="q5" value="c"> ③ 무거워서 떠오를 수 없다.</label>
+                    <label><input type="radio" name="q5" value="d"> ④ 큰 소리로 터질 수 있다.</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>6. 다음 중 글의 내용과 일치하는 것을 고르세요.</p>
+                <div class="options">
+                    <p>
+                        One day, Mia could not find her kitten. She was worried. <br>
+                        She went outside. She knocked on doors.<br>
+                        She showed photos of her kitten. She asked, “Did you see this kitten?”<br>
+                        She looked everywhere. Hours later, Mia returned home.<br>
+                        She felt sad. She went to bed without dinner.<br>
+                        But when she got under the blanket, she heard a soft purr. Her kitten was under her blanket the whole time!
+                    </p>
+                    <label><input type="radio" name="q6" value="a"> ① 미아는 강아지를 잃어버렸다.</label>
+                    <label><input type="radio" name="q6" value="b"> ② 미아는 이웃에게 전화를 걸었다.</label>
+                    <label><input type="radio" name="q6" value="c"> ③ 미아는 저녁을 먹고 잠이 들었다.</label>
+                    <label><input type="radio" name="q6" value="d"> ④ 새끼 고양이는 담요 밑에 있었다.</label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">결과 확인</button>
+        </form>
+
+        <div id="results">
+            <h2>채점 결과</h2>
+            <p>총 점수: <span id="score">0</span> / 10</p>
+            <ul id="answerFeedback"></ul>
+        </div>
+    </div>
+
+    <script>
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const quizContainer = document.getElementById('quizContainer');
+        // const countdownMessage = document.getElementById('countdownMessage'); // 더 이상 사용하지 않음
+
+        // 시작 버튼 클릭 이벤트 리스너
+        startButton.addEventListener('click', function() {
+            startScreen.classList.add('hidden'); // 시작 화면 숨기기
+            // countdownMessage.style.display = 'none'; // 카운트다운 메시지 숨김 (이전 코드에서 이미 숨겨져 있음)
+            quizContainer.style.display = 'block'; // 퀴즈 컨테이너 보이기
+            setTimeout(() => { // 퀴즈 컨테이너 페이드인 애니메이션을 위한 약간의 지연
+                quizContainer.classList.add('visible');
+            }, 50);
+        });
+
+
+        document.getElementById('quizForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // 폼 제출의 기본 동작 방지
+
+            // 각 문제의 정답을 정의합니다.
+            // 객관식 문제는 선택지의 value를, 주관식 문제는 정확한 한글 단어를 사용합니다.
+            const answers = {
+                q1: 'c', // practice – 점수를 얻다, 득점하다 (오답)
+                q2: 'b', // empty – 각각의 (오답)
+                q3_1: '머무르다',
+                q3_2: '촛불',
+                q3_3: '걱정하는',
+                q3_4: '믿다',
+                q4_1: '떨어뜨리다',
+                q4_2: '노를 젓다',
+                q4_3: '가로질러',
+                q4_4: '많은',
+                q5: 'c', // 무거워서 떠오를 수 없다. (글의 내용과 일치하지 않음)
+                q6: 'd'  // 새끼 고양이는 담요 밑에 있었다. (글의 내용과 일치)
+            };
+
+            let score = 0; // 총 점수 초기화
+            const answerFeedback = document.getElementById('answerFeedback');
+            answerFeedback.innerHTML = ''; // 이전 결과 초기화
+
+            // 1번 문제 채점 (객관식)
+            const q1Answer = document.querySelector('input[name="q1"]:checked');
+            let q1Correct = false;
+            if (q1Answer && q1Answer.value === answers.q1) {
+                score++;
+                q1Correct = true;
+            }
+            appendFeedback('1번', q1Correct, q1Answer ? q1Answer.value : '선택 안함', '③ (practice – 점수를 얻다, 득점하다)');
+
+            // 2번 문제 채점 (객관식)
+            const q2Answer = document.querySelector('input[name="q2"]:checked');
+            let q2Correct = false;
+            if (q2Answer && q2Answer.value === answers.q2) {
+                score++;
+                q2Correct = true;
+            }
+            appendFeedback('2번', q2Correct, q2Answer ? q2Answer.value : '선택 안함', '② (empty – 각각의)');
+
+            // 3번 문제 채점 (주관식 - 여러 개의 입력 필드)
+            const q3Inputs = [
+                { name: 'q3_1', correct: answers.q3_1, label: 'stay' },
+                { name: 'q3_2', correct: answers.q3_2, label: 'candle' },
+                { name: 'q3_3', correct: answers.q3_3, label: 'worried' },
+                { name: 'q3_4', correct: answers.q3_4, label: 'believe' }
+            ];
+            q3Inputs.forEach((input, index) => {
+                const userAnswer = document.querySelector(`input[name="${input.name}"]`).value.trim();
+                // 대소문자 구분 없이 비교하기 위해 toLowerCase() 사용 (선택 사항)
+                let isCorrect = (userAnswer.toLowerCase() === input.correct.toLowerCase());
+                if (isCorrect) {
+                    score++;
+                }
+                appendFeedback(`3번 (${input.label})`, isCorrect, userAnswer, input.correct);
+            });
+
+            // 4번 문제 채점 (주관식 - 여러 개의 입력 필드)
+            const q4Inputs = [
+                { name: 'q4_1', correct: answers.q4_1, label: 'drop' },
+                { name: 'q4_2', correct: answers.q4_2, label: 'row' },
+                { name: 'q4_3', correct: answers.q4_3, label: 'across' },
+                { name: 'q4_4', correct: answers.q4_4, label: '많은' }
+            ];
+            q4Inputs.forEach((input, index) => {
+                const userAnswer = document.querySelector(`input[name="${input.name}"]`).value.trim();
+                let isCorrect = (userAnswer.toLowerCase() === input.correct.toLowerCase());
+                if (isCorrect) {
+                    score++;
+                }
+                appendFeedback(`4번 (${input.label})`, isCorrect, userAnswer, input.correct);
+            });
+
+            // 5번 문제 채점 (객관식)
+            const q5Answer = document.querySelector('input[name="q5"]:checked');
+            let q5Correct = false;
+            if (q5Answer && q5Answer.value === answers.q5) {
+                score++;
+                q5Correct = true;
+            }
+            appendFeedback('5번', q5Correct, q5Answer ? q5Answer.value : '선택 안함', '③ (무거워서 떠오를 수 없다.)');
+
+            // 6번 문제 채점 (객관식)
+            const q6Answer = document.querySelector('input[name="q6"]:checked');
+            let q6Correct = false;
+            if (q6Answer && q6Answer.value === answers.q6) {
+                score++;
+                q6Correct = true;
+            }
+            appendFeedback('6번', q6Correct, q6Answer ? q6Answer.value : '선택 안함', '④ (새끼 고양이는 담요 밑에 있었다.)');
+
+
+            // 최종 점수를 화면에 표시합니다.
+            document.getElementById('score').textContent = score;
+            // 결과 영역을 보이게 합니다.
+            document.getElementById('results').style.display = 'block';
+        });
+
+        /**
+         * 채점 결과를 화면에 추가하는 헬퍼 함수
+         * @param {string} questionNum - 문제 번호 (예: "1번")
+         * @param {boolean} isCorrect - 정답 여부
+         * @param {string} userAnswer - 사용자가 제출한 답변
+         * @param {string} correctAnswer - 정답
+         */
+        function appendFeedback(questionNum, isCorrect, userAnswer, correctAnswer) {
+            const li = document.createElement('li');
+            // 정답 여부에 따라 클래스를 다르게 적용하여 색상 구분
+            li.className = isCorrect ? 'correct' : 'incorrect';
+            li.innerHTML = `<strong>${questionNum} 문제:</strong> ${isCorrect ? '정답' : '오답'} <br>
+                            당신의 답변: ${userAnswer} <br>
+                            정답: <span class="correct-answer">${correctAnswer}</span>`;
+            document.getElementById('answerFeedback').appendChild(li);
+        }
+    </script>
+</body>
+</html>
